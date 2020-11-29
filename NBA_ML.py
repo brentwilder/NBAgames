@@ -47,6 +47,7 @@ def main():
     # Begin Feature Engineering
     # Feature 1: Home Team arena capacity
     # Feature 2: Year Home Team was founded
+    # Feature 3: Conference, West=0 and East=1
     df_teams = df_teams.rename(columns={"TEAM_ID": "HOME_TEAM_ID"})
     temp = pd.merge(df, df_teams, on="HOME_TEAM_ID")
     df = pd.merge(
@@ -55,8 +56,7 @@ def main():
         on="HOME_TEAM_ID",
         how="left",
     )
-
-    # Feature 3:
+    print(df)
 
 
 if __name__ == "__main__":
