@@ -1,11 +1,12 @@
 # Final Project - Using ML and NBA games to predict winners
 # Brenton Wilder
+
+# Import libraries
 import sys
 
 
 def main():
-
-    print("Hello world!")
+    print("hello world")
 
 
 if __name__ == "__main__":
