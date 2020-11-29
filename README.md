@@ -1,6 +1,10 @@
-# NBA games machine learning project
+# NBA machine learning project
 
 ![SacTown](https://e0.365dm.com/18/12/768x432/deaaron-fox-sacramento-kings_4531686.jpg)
+
+### The goal of this project is to predict the winner of any NBA game by engineering
+
+### at least 50 features deployed into a random forest model, accessible through docker
 
 # Setup for developement:
 
