@@ -1,4 +1,6 @@
-# PythonProject
+# NBA games machine learning project
+
+![SacTown](https://e0.365dm.com/18/12/768x432/deaaron-fox-sacramento-kings_4531686.jpg)
 
 # Setup for developement:
 
