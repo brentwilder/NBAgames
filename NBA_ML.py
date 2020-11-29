@@ -15,9 +15,9 @@ def main():
 
     # Load dataframes and clean
     df = pd.read_csv("./data/games.csv")
-    df_teams = pd.read_csv("./data/teams.csv")
+    df_tms = pd.read_csv("./data/teams.csv", na_filter=False)
     df = df.dropna()
-    df_teams = df_teams.dropna()
+    df_tms = df_tms.dropna()
 
     # Test model using only existing features in games
     # Don't use points home or points (win team scores more)
@@ -48,11 +48,10 @@ def main():
     # Feature 1: Home Team arena capacity
     # Feature 2: Year Home Team was founded
     # Feature 3: Conference, West=0 and East=1
-    df_teams = df_teams.rename(columns={"TEAM_ID": "HOME_TEAM_ID"})
-    temp = pd.merge(df, df_teams, on="HOME_TEAM_ID")
+    df_tms = df_tms.rename(columns={"TEAM_ID": "HOME_TEAM_ID"})
     df = pd.merge(
         df,
-        temp[["HOME_TEAM_ID", "ARENACAPACITY", "YEARFOUNDED"]],
+        df_tms[["HOME_TEAM_ID", "ARENACAPACITY", "YEARFOUNDED", "CONFERENCE"]],
         on="HOME_TEAM_ID",
         how="left",
     )
