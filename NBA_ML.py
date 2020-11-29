@@ -13,14 +13,16 @@ from sklearn.model_selection import train_test_split
 
 def main():
 
-    # Load games to a pandas dataframe
-    df_games = pd.read_csv("./data/games.csv")
-    df_games = df_games.dropna()
+    # Load dataframes and clean
+    df = pd.read_csv("./data/games.csv")
+    df_teams = pd.read_csv("./data/teams.csv")
+    df = df.dropna()
+    df_teams = df_teams.dropna()
 
     # Test model using only existing features in games
     # Don't use points home or points (win team scores more)
-    y = df_games["HOME_TEAM_WINS"]
-    X = df_games.drop(
+    y = df["HOME_TEAM_WINS"]
+    X = df.drop(
         columns=[
             "HOME_TEAM_WINS",
             "GAME_DATE_EST",
@@ -34,12 +36,27 @@ def main():
     clf = RandomForestClassifier(n_estimators=100)
     clf.fit(X_train, y_train)
     y_pred = clf.predict(X_test)
+    print("_________Test Model_________")
     print("Accuracy:", metrics.accuracy_score(y_test, y_pred))
     imp = pd.Series(clf.feature_importances_, index=X.columns).sort_values(
         ascending=False
     )
     print("FEATURE IMPORTANCE:")
     print(imp)
+
+    # Begin Feature Engineering
+    # Feature 1: Home Team arena capacity
+    # Feature 2: Year Home Team was founded
+    df_teams = df_teams.rename(columns={"TEAM_ID": "HOME_TEAM_ID"})
+    temp = pd.merge(df, df_teams, on="HOME_TEAM_ID")
+    df = pd.merge(
+        df,
+        temp[["HOME_TEAM_ID", "ARENACAPACITY", "YEARFOUNDED"]],
+        on="HOME_TEAM_ID",
+        how="left",
+    )
+
+    # Feature 3:
 
 
 if __name__ == "__main__":
