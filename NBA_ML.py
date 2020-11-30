@@ -57,10 +57,10 @@ def main():
     print("FEATURE IMPORTANCE:")
     print(imp)
 
-    # Begin Feature Engineering
-    # Feature 1: Home Team arena capacity
-    # Feature 2: Year Home Team was founded
-    # Feature 3: Conference of Home Team, West=0 and East=1
+    # Begin Feature Engineering (1-15 from data)
+    # Feature 16: Home Team arena capacity
+    # Feature 17: Year Home Team was founded
+    # Feature 18: Conference of Home Team, West=0 and East=1
     homID = "HOME_TEAM_ID"
     df_tm = df_tm.rename(columns={"TEAM_ID": "HOME_TEAM_ID"})
     df = pd.merge(
@@ -77,9 +77,9 @@ def main():
         }
     )
 
-    # Feature 4: Away Team arena capacity
-    # Feature 5: Year Away Team was founded
-    # Feature 6: Conference of Away Team, West=0 and East=1
+    # Feature 19: Away Team arena capacity
+    # Feature 20: Year Away Team was founded
+    # Feature 21: Conference of Away Team, West=0 and East=1
     visID = "VISITOR_TEAM_ID"
     df_tm = df_tm.rename(columns={"HOME_TEAM_ID": "VISITOR_TEAM_ID"})
     df = pd.merge(
@@ -96,8 +96,8 @@ def main():
         }
     )
 
-    # Feature 7: Current win percentage for Home Team
-    # Feature 8: Games played so far for Home Team (0-82)
+    # Feature 22: Current win percentage for Home Team
+    # Feature 23: Games played so far for Home Team (0-82)
     df_rnk.drop(
         [
             "LEAGUE_ID",
@@ -125,8 +125,8 @@ def main():
     homStd = "STANDINGSDATE_homeTeam"
     df.drop(["TEAM_ID_homeTeam", homStd], axis=1, inplace=True)
 
-    # Feature 9: Current win percentage for Away Team
-    # Feature 10: Games played so far for Away Team (0-82)
+    # Feature 24: Current win percentage for Away Team
+    # Feature 25: Games played so far for Away Team (0-82)
     df = pd.merge_asof(
         df,
         df_rnk.add_suffix("_awayTeam"),
@@ -140,32 +140,38 @@ def main():
     visStd = "STANDINGSDATE_awayTeam"
     df.drop(["TEAM_ID_awayTeam", visStd], axis=1, inplace=True)
 
-    # Feature 11: Day of the week game was on (0-6)
+    # Feature 26: Day of the week game was on (0-6)
     df["WEEKDAY"] = df["GAME_DATE_EST"].apply(
         lambda x: (
             datetime.fromordinal(datetime(1900, 1, 1).toordinal() + x - 2)
         ).weekday()
     )
 
-    # Feature 12: Month number game was on (1-12)
+    # Feature 27: Weekend game?  (1=True,0=False)
+    df["WEEKEND_GAME"] = df["WEEKDAY"].apply(lambda x: 0 if x < 5 else 1)
+
+    # Feature 28: Month number game was on (1-12)
     df["MONTH_NUM"] = df["GAME_DATE_EST"].apply(
         lambda x: (
             datetime.fromordinal(datetime(1900, 1, 1).toordinal() + x - 2)
         ).strftime("%m")
     )
 
-    # Feature 13: Difference in FG % (Home Team FG - Away Team FG)
+    # Feature 29: Difference in FG % (Home Team FG - Away Team FG)
     df = df.astype(float)
     df["DIFF_FG"] = df["FG_PCT_home"] - df["FG_PCT_away"]
 
-    # Feature 14: Difference in Reb (Home Team Reb - Away Team Reb)
+    # Feature 30: Difference in Reb (Home Team Reb - Away Team Reb)
     df["DIFF_REB"] = df["REB_home"] - df["REB_away"]
 
-    # Feature 15: Difference in Ast (Home Team Ast - Away Team Ast)
+    # Feature 31: Difference in Ast (Home Team Ast - Away Team Ast)
     df["DIFF_AST"] = df["AST_home"] - df["AST_away"]
 
-    # Feature 16: Difference in FT (Home Team FT - Away Team FT)
+    # Feature 32: Difference in FT (Home Team FT - Away Team FT)
     df["DIFF_FT"] = df["FT_PCT_home"] - df["FT_PCT_away"]
+
+    # Feature 33: Difference in 3PT percent (Home - Away)
+    df["DIFF_3PT"] = df["FG3_PCT_home"] - df["FG3_PCT_away"]
 
     print(df)
 
