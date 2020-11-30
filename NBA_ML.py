@@ -1,8 +1,8 @@
 # Final Project - Using ML and NBA games to predict winners
 # 0 = home team loses; 1 = home team wins
 # Brenton Wilder
-
 # Import libraries
+import pickle
 import sys
 from datetime import datetime
 
@@ -34,33 +34,10 @@ def main():
     df_rnk.sort_values("STANDINGSDATE")
     df_rnk.set_index("STANDINGSDATE")
 
-    # Test model using only existing features in games
-    # Don't use points home or points (win team scores more)
-    y = df["HOME_TEAM_WINS"]
-    X = df.drop(
-        columns=[
-            "HOME_TEAM_WINS",
-            "PTS_home",
-            "PTS_away",
-        ],
-        axis=1,
-    )
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
-    clf = RandomForestClassifier(n_estimators=100)
-    clf.fit(X_train, y_train)
-    y_pred = clf.predict(X_test)
-    print("_________Test Model_________")
-    print("Accuracy:", metrics.accuracy_score(y_test, y_pred))
-    imp = pd.Series(clf.feature_importances_, index=X.columns).sort_values(
-        ascending=False
-    )
-    print("FEATURE IMPORTANCE:")
-    print(imp)
-
-    # Begin Feature Engineering (1-15 from data)
-    # Feature 16: Home Team arena capacity
-    # Feature 17: Year Home Team was founded
-    # Feature 18: Conference of Home Team, West=0 and East=1
+    # Begin Feature Engineering (1-16 from data)
+    # Feature 17: Home Team arena capacity
+    # Feature 18: Year Home Team was founded
+    # Feature 19: Conference of Home Team, West=0 and East=1
     homID = "HOME_TEAM_ID"
     df_tm = df_tm.rename(columns={"TEAM_ID": "HOME_TEAM_ID"})
     df = pd.merge(
@@ -77,9 +54,9 @@ def main():
         }
     )
 
-    # Feature 19: Away Team arena capacity
-    # Feature 20: Year Away Team was founded
-    # Feature 21: Conference of Away Team, West=0 and East=1
+    # Feature 20: Away Team arena capacity
+    # Feature 21: Year Away Team was founded
+    # Feature 22: Conference of Away Team, West=0 and East=1
     visID = "VISITOR_TEAM_ID"
     df_tm = df_tm.rename(columns={"HOME_TEAM_ID": "VISITOR_TEAM_ID"})
     df = pd.merge(
@@ -96,8 +73,8 @@ def main():
         }
     )
 
-    # Feature 22: Current win percentage for Home Team
-    # Feature 23: Games played so far for Home Team (0-82)
+    # Feature 23: Current win percentage for Home Team
+    # Feature 24: Games played so far for Home Team (0-82)
     df_rnk.drop(
         [
             "LEAGUE_ID",
@@ -125,8 +102,8 @@ def main():
     homStd = "STANDINGSDATE_homeTeam"
     df.drop(["TEAM_ID_homeTeam", homStd], axis=1, inplace=True)
 
-    # Feature 24: Current win percentage for Away Team
-    # Feature 25: Games played so far for Away Team (0-82)
+    # Feature 25: Current win percentage for Away Team
+    # Feature 26: Games played so far for Away Team (0-82)
     df = pd.merge_asof(
         df,
         df_rnk.add_suffix("_awayTeam"),
@@ -140,40 +117,66 @@ def main():
     visStd = "STANDINGSDATE_awayTeam"
     df.drop(["TEAM_ID_awayTeam", visStd], axis=1, inplace=True)
 
-    # Feature 26: Day of the week game was on (0-6)
+    # Feature 27: Day of the week game was on (0-6)
     df["WEEKDAY"] = df["GAME_DATE_EST"].apply(
         lambda x: (
             datetime.fromordinal(datetime(1900, 1, 1).toordinal() + x - 2)
         ).weekday()
     )
 
-    # Feature 27: Weekend game?  (1=True,0=False)
+    # Feature 28: Weekend game?  (1=True,0=False)
     df["WEEKEND_GAME"] = df["WEEKDAY"].apply(lambda x: 0 if x < 5 else 1)
 
-    # Feature 28: Month number game was on (1-12)
+    # Feature 29: Month number game was on (1-12)
     df["MONTH_NUM"] = df["GAME_DATE_EST"].apply(
         lambda x: (
             datetime.fromordinal(datetime(1900, 1, 1).toordinal() + x - 2)
         ).strftime("%m")
     )
 
-    # Feature 29: Difference in FG % (Home Team FG - Away Team FG)
+    # Feature 30: Difference in FG % (Home Team FG - Away Team FG)
     df = df.astype(float)
     df["DIFF_FG"] = df["FG_PCT_home"] - df["FG_PCT_away"]
 
-    # Feature 30: Difference in Reb (Home Team Reb - Away Team Reb)
+    # Feature 31: Difference in Reb (Home Team Reb - Away Team Reb)
     df["DIFF_REB"] = df["REB_home"] - df["REB_away"]
 
-    # Feature 31: Difference in Ast (Home Team Ast - Away Team Ast)
+    # Feature 32: Difference in Ast (Home Team Ast - Away Team Ast)
     df["DIFF_AST"] = df["AST_home"] - df["AST_away"]
 
-    # Feature 32: Difference in FT (Home Team FT - Away Team FT)
+    # Feature 33: Difference in FT (Home Team FT - Away Team FT)
     df["DIFF_FT"] = df["FT_PCT_home"] - df["FT_PCT_away"]
 
-    # Feature 33: Difference in 3PT percent (Home - Away)
+    # Feature 34: Difference in 3PT percent (Home - Away)
     df["DIFF_3PT"] = df["FG3_PCT_home"] - df["FG3_PCT_away"]
 
-    print(df)
+    # print(df)
+
+    # Test model
+    # Don't use points home or points (win team scores more)
+    y = df["HOME_TEAM_WINS"]
+    X = df.drop(
+        columns=[
+            "HOME_TEAM_WINS",
+            "PTS_home",
+            "PTS_away",
+        ],
+        axis=1,
+    )
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
+    clf = RandomForestClassifier(n_estimators=100)
+    clf.fit(X_train, y_train)
+    y_pred = clf.predict(X_test)
+    print("_________Test Model_________")
+    print("Accuracy:", metrics.accuracy_score(y_test, y_pred))
+    imp = pd.Series(clf.feature_importances_, index=X.columns).sort_values(
+        ascending=False
+    )
+    print("FEATURE IMPORTANCE:")
+    print(imp)
+
+    with open("./model.pkl", "wb") as model_pkl:
+        pickle.dump(clf, model_pkl)
 
 
 if __name__ == "__main__":
