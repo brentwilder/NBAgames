@@ -2,3 +2,5 @@ numpy
 pandas
 sklearn
 Flask
+matplotlib
+plotly

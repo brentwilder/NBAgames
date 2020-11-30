@@ -7,8 +7,9 @@ import sys
 from datetime import datetime
 
 import pandas as pd
-from sklearn import metrics
+import plotly.express as px
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score, auc, roc_curve
 from sklearn.model_selection import train_test_split
 
 
@@ -75,14 +76,14 @@ def main():
 
     # Feature 23: Current win percentage for Home Team
     # Feature 24: Games played so far for Home Team (0-82)
+    # Feature 25: Current W for Home Team
+    # Feature 26: Current L for Home Team
     df_rnk.drop(
         [
             "LEAGUE_ID",
             "SEASON_ID",
             "CONFERENCE",
             "TEAM",
-            "W",
-            "L",
             "HOME_RECORD",
             "ROAD_RECORD",
         ],
@@ -102,8 +103,10 @@ def main():
     homStd = "STANDINGSDATE_homeTeam"
     df.drop(["TEAM_ID_homeTeam", homStd], axis=1, inplace=True)
 
-    # Feature 25: Current win percentage for Away Team
-    # Feature 26: Games played so far for Away Team (0-82)
+    # Feature 27: Current win percentage for Away Team
+    # Feature 28: Games played so far for Away Team (0-82)
+    # Feature 29: Current W for Away Team
+    # Feature 30: Current L for Away Team
     df = pd.merge_asof(
         df,
         df_rnk.add_suffix("_awayTeam"),
@@ -117,37 +120,37 @@ def main():
     visStd = "STANDINGSDATE_awayTeam"
     df.drop(["TEAM_ID_awayTeam", visStd], axis=1, inplace=True)
 
-    # Feature 27: Day of the week game was on (0-6)
+    # Feature 31: Day of the week game was on (0-6)
     df["WEEKDAY"] = df["GAME_DATE_EST"].apply(
         lambda x: (
             datetime.fromordinal(datetime(1900, 1, 1).toordinal() + x - 2)
         ).weekday()
     )
 
-    # Feature 28: Weekend game?  (1=True,0=False)
+    # Feature 32: Weekend game?  (1=True,0=False)
     df["WEEKEND_GAME"] = df["WEEKDAY"].apply(lambda x: 0 if x < 5 else 1)
 
-    # Feature 29: Month number game was on (1-12)
+    # Feature 33: Month number game was on (1-12)
     df["MONTH_NUM"] = df["GAME_DATE_EST"].apply(
         lambda x: (
             datetime.fromordinal(datetime(1900, 1, 1).toordinal() + x - 2)
         ).strftime("%m")
     )
 
-    # Feature 30: Difference in FG % (Home Team FG - Away Team FG)
+    # Feature 34: Difference in FG % (Home Team FG - Away Team FG)
     df = df.astype(float)
     df["DIFF_FG"] = df["FG_PCT_home"] - df["FG_PCT_away"]
 
-    # Feature 31: Difference in Reb (Home Team Reb - Away Team Reb)
+    # Feature 35: Difference in Reb (Home Team Reb - Away Team Reb)
     df["DIFF_REB"] = df["REB_home"] - df["REB_away"]
 
-    # Feature 32: Difference in Ast (Home Team Ast - Away Team Ast)
+    # Feature 36: Difference in Ast (Home Team Ast - Away Team Ast)
     df["DIFF_AST"] = df["AST_home"] - df["AST_away"]
 
-    # Feature 33: Difference in FT (Home Team FT - Away Team FT)
+    # Feature 37: Difference in FT (Home Team FT - Away Team FT)
     df["DIFF_FT"] = df["FT_PCT_home"] - df["FT_PCT_away"]
 
-    # Feature 34: Difference in 3PT percent (Home - Away)
+    # Feature 38: Difference in 3PT percent (Home - Away)
     df["DIFF_3PT"] = df["FG3_PCT_home"] - df["FG3_PCT_away"]
 
     # print(df)
@@ -167,14 +170,31 @@ def main():
     clf = RandomForestClassifier(n_estimators=100)
     clf.fit(X_train, y_train)
     y_pred = clf.predict(X_test)
+    y_pred_proba = clf.predict_proba(X_test)[::, 1]
     print("_________Test Model_________")
-    print("Accuracy:", metrics.accuracy_score(y_test, y_pred))
+    print("Accuracy:", accuracy_score(y_test, y_pred))
     imp = pd.Series(clf.feature_importances_, index=X.columns).sort_values(
         ascending=False
     )
     print("FEATURE IMPORTANCE:")
     print(imp)
 
+    # Plot ROC curve and AUC
+    fpr, tpr, thresholds = roc_curve(y_test, y_pred_proba)
+    fig = px.area(
+        x=fpr,
+        y=tpr,
+        title=f"ROC Curve (AUC={auc(fpr, tpr):.4f})",
+        labels=dict(x="False Positive Rate", y="True Positive Rate"),
+        width=700,
+        height=500,
+    )
+    fig.add_shape(type="line", line=dict(dash="dash"), x0=0, x1=1, y0=0, y1=1)
+    fig.update_yaxes(scaleanchor="x", scaleratio=1)
+    fig.update_xaxes(constrain="domain")
+    fig.show()
+
+    # Export model to pickle file
     with open("./model.pkl", "wb") as model_pkl:
         pickle.dump(clf, model_pkl)
 
