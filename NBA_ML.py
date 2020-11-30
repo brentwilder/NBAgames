@@ -4,6 +4,7 @@
 
 # Import libraries
 import sys
+from datetime import datetime
 
 import pandas as pd
 from sklearn import metrics
@@ -21,6 +22,7 @@ def main():
     df.drop_duplicates()
     df.sort_values("GAME_DATE_EST")
     df.set_index("GAME_DATE_EST")
+    df.drop(["GAME_STATUS_TEXT", "TEAM_ID_home"], axis=1, inplace=True)
 
     df_tm = pd.read_csv("./data/teams.csv", na_filter=False)
     df_tm.replace("", nan_value, inplace=True)
@@ -38,7 +40,6 @@ def main():
     X = df.drop(
         columns=[
             "HOME_TEAM_WINS",
-            "GAME_STATUS_TEXT",
             "PTS_home",
             "PTS_away",
         ],
@@ -96,13 +97,13 @@ def main():
     )
 
     # Feature 7: Current win percentage for Home Team
+    # Feature 8: Games played so far for Home Team (0-82)
     df_rnk.drop(
         [
             "LEAGUE_ID",
             "SEASON_ID",
             "CONFERENCE",
             "TEAM",
-            "G",
             "W",
             "L",
             "HOME_RECORD",
@@ -124,7 +125,8 @@ def main():
     homStd = "STANDINGSDATE_homeTeam"
     df.drop(["TEAM_ID_homeTeam", homStd], axis=1, inplace=True)
 
-    # Feature 8: Current win percentage for Away Team
+    # Feature 9: Current win percentage for Away Team
+    # Feature 10: Games played so far for Away Team (0-82)
     df = pd.merge_asof(
         df,
         df_rnk.add_suffix("_awayTeam"),
@@ -137,6 +139,33 @@ def main():
     df = df.dropna()
     visStd = "STANDINGSDATE_awayTeam"
     df.drop(["TEAM_ID_awayTeam", visStd], axis=1, inplace=True)
+
+    # Feature 11: Day of the week game was on (0-6)
+    df["WEEKDAY"] = df["GAME_DATE_EST"].apply(
+        lambda x: (
+            datetime.fromordinal(datetime(1900, 1, 1).toordinal() + x - 2)
+        ).weekday()
+    )
+
+    # Feature 12: Month number game was on (1-12)
+    df["MONTH_NUM"] = df["GAME_DATE_EST"].apply(
+        lambda x: (
+            datetime.fromordinal(datetime(1900, 1, 1).toordinal() + x - 2)
+        ).strftime("%m")
+    )
+
+    # Feature 13: Difference in FG % (Home Team FG - Away Team FG)
+    df = df.astype(float)
+    df["DIFF_FG"] = df["FG_PCT_home"] - df["FG_PCT_away"]
+
+    # Feature 14: Difference in Reb (Home Team Reb - Away Team Reb)
+    df["DIFF_REB"] = df["REB_home"] - df["REB_away"]
+
+    # Feature 15: Difference in Ast (Home Team Ast - Away Team Ast)
+    df["DIFF_AST"] = df["AST_home"] - df["AST_away"]
+
+    # Feature 16: Difference in FT (Home Team FT - Away Team FT)
+    df["DIFF_FT"] = df["FT_PCT_home"] - df["FT_PCT_away"]
 
     print(df)
 
