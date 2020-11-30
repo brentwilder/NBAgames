@@ -8,9 +8,20 @@ from datetime import datetime
 
 import pandas as pd
 import plotly.express as px
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import accuracy_score, auc, roc_curve
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+from sklearn.ensemble.bagging import BaggingClassifier
+from sklearn.ensemble.forest import RandomForestClassifier
+from sklearn.ensemble.gradient_boosting import GradientBoostingClassifier
+from sklearn.ensemble.weight_boosting import AdaBoostClassifier
+from sklearn.linear_model import LogisticRegression, LogisticRegressionCV
+from sklearn.metrics import accuracy_score, roc_auc_score, roc_curve
 from sklearn.model_selection import train_test_split
+from sklearn.naive_bayes import BernoulliNB, GaussianNB
+from sklearn.neighbors.classification import KNeighborsClassifier
+from sklearn.neural_network.multilayer_perceptron import MLPClassifier
+from sklearn.svm import SVC, NuSVC
+from sklearn.tree import DecisionTreeClassifier, ExtraTreeClassifier
+from xgboost import XGBClassifier
 
 
 def main():
@@ -155,7 +166,7 @@ def main():
 
     # print(df)
 
-    # Test model
+    # Final model
     # Don't use points home or points (win team scores more)
     y = df["HOME_TEAM_WINS"]
     X = df.drop(
@@ -166,37 +177,76 @@ def main():
         ],
         axis=1,
     )
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.3, random_state=2424
+    )
+    classifiers = [
+        ExtraTreeClassifier(random_state=2408),
+        DecisionTreeClassifier(random_state=2408),
+        MLPClassifier(),
+        KNeighborsClassifier(),
+        AdaBoostClassifier(),
+        GradientBoostingClassifier(),
+        BaggingClassifier(),
+        RandomForestClassifier(random_state=2408),
+        BernoulliNB(),
+        GaussianNB(),
+        LinearDiscriminantAnalysis(),
+        LogisticRegression(),
+        LogisticRegressionCV(),
+        NuSVC(probability=True),
+        SVC(probability=True),
+        XGBClassifier(),
+    ]
+
+    result_table = pd.DataFrame(columns=["classifiers", "fpr", "tpr", "auc"])
+
+    for cls in classifiers:
+        model = cls.fit(X_train, y_train)
+        yproba = model.predict_proba(X_test)[::, 1]
+        fpr, tpr, _ = roc_curve(y_test, yproba)
+        auc = roc_auc_score(y_test, yproba)
+        result_table = result_table.append(
+            {
+                "classifiers": cls.__class__.__name__,
+                "fpr": fpr,
+                "tpr": tpr,
+                "auc": auc,
+            },
+            ignore_index=True,
+        )
+
+    # Plot bar graph comparing ROC/AUC
+    fig = px.bar(result_table, x="classifiers", y="auc")
+    fig.update_traces(
+        marker_color="rgb(158,202,225)",
+        marker_line_color="rgb(8,48,107)",
+        marker_line_width=1.5,
+        opacity=0.9,
+    )
+    fig.update_layout(
+        paper_bgcolor="rgb(0,0,0,0)",
+        title="auc values from ROC curve",
+        font=dict(family="Times New Roman", size=20, color="black"),
+    )
+    fig.show()
+
+    # Show feature importance for best model
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
-    clf = RandomForestClassifier(n_estimators=100)
-    clf.fit(X_train, y_train)
-    y_pred = clf.predict(X_test)
-    y_pred_proba = clf.predict_proba(X_test)[::, 1]
-    print("_________Test Model_________")
+    final = GradientBoostingClassifier()
+    final.fit(X_train, y_train)
+    y_pred = final.predict(X_test)
+    print("_________Final Model_________")
     print("Accuracy:", accuracy_score(y_test, y_pred))
-    imp = pd.Series(clf.feature_importances_, index=X.columns).sort_values(
+    imp = pd.Series(final.feature_importances_, index=X.columns).sort_values(
         ascending=False
     )
     print("FEATURE IMPORTANCE:")
     print(imp)
 
-    # Plot ROC curve and AUC
-    fpr, tpr, thresholds = roc_curve(y_test, y_pred_proba)
-    fig = px.area(
-        x=fpr,
-        y=tpr,
-        title=f"ROC Curve (AUC={auc(fpr, tpr):.4f})",
-        labels=dict(x="False Positive Rate", y="True Positive Rate"),
-        width=700,
-        height=500,
-    )
-    fig.add_shape(type="line", line=dict(dash="dash"), x0=0, x1=1, y0=0, y1=1)
-    fig.update_yaxes(scaleanchor="x", scaleratio=1)
-    fig.update_xaxes(constrain="domain")
-    fig.show()
-
     # Export model to pickle file
     with open("./model.pkl", "wb") as model_pkl:
-        pickle.dump(clf, model_pkl)
+        pickle.dump(final, model_pkl)
 
 
 if __name__ == "__main__":
