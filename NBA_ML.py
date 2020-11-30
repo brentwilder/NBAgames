@@ -124,7 +124,7 @@ def main():
     homStd = "STANDINGSDATE_homeTeam"
     df.drop(["TEAM_ID_homeTeam", homStd], axis=1, inplace=True)
 
-    # Feature 8: Current win percentage for Home Team
+    # Feature 8: Current win percentage for Away Team
     df = pd.merge_asof(
         df,
         df_rnk.add_suffix("_awayTeam"),
