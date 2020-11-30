@@ -14,10 +14,19 @@ from sklearn.model_selection import train_test_split
 def main():
 
     # Load dataframes and clean
-    df = pd.read_csv("./data/games.csv")
-    df_tms = pd.read_csv("./data/teams.csv", na_filter=False)
+    df = pd.read_csv("./data/games.csv", na_filter=False)
+    nan_value = float("NaN")
+    df.replace("", nan_value, inplace=True)
     df = df.dropna()
+    df = df.sort_values("GAME_DATE_EST").set_index(["GAME_DATE_EST"])
+
+    df_tms = pd.read_csv("./data/teams.csv", na_filter=False)
+    df_tms.replace("", nan_value, inplace=True)
     df_tms = df_tms.dropna()
+
+    df_rnk = pd.read_csv("./data/ranking.csv", na_filter=False)
+    df_rnk.replace("", nan_value, inplace=True)
+    df_rnk = df_rnk.dropna()
 
     # Test model using only existing features in games
     # Don't use points home or points (win team scores more)
@@ -25,7 +34,6 @@ def main():
     X = df.drop(
         columns=[
             "HOME_TEAM_WINS",
-            "GAME_DATE_EST",
             "GAME_STATUS_TEXT",
             "PTS_home",
             "PTS_away",
@@ -55,6 +63,20 @@ def main():
         on="HOME_TEAM_ID",
         how="left",
     )
+
+    # Feature 4: Current win percentage for Home Team
+    df_rnk.sort_values("STANDINGSDATE", inplace=True)
+    df_rnk.set_index("STANDINGSDATE", inplace=True)
+    df = pd.merge_asof(
+        df,
+        df_rnk.add_suffix("_homeTeam"),
+        left_index=True,
+        right_index=True,
+        left_by="HOME_TEAM_ID",
+        right_by="TEAM_ID" + "_homeTeam",
+        allow_exact_matches=False,
+    )
+
     print(df)
 
 
