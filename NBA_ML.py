@@ -1,24 +1,29 @@
 # Final Project - Using ML and NBA games to predict winners
 # 0 = home team loses; 1 = home team wins
 # Brenton Wilder
+
 # Import libraries
 import pickle
 import sys
 from datetime import datetime
 
+import numpy as np
 import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
-from sklearn.ensemble.bagging import BaggingClassifier
-from sklearn.ensemble.forest import RandomForestClassifier
-from sklearn.ensemble.gradient_boosting import GradientBoostingClassifier
-from sklearn.ensemble.weight_boosting import AdaBoostClassifier
+from sklearn.ensemble import (
+    AdaBoostClassifier,
+    BaggingClassifier,
+    GradientBoostingClassifier,
+    RandomForestClassifier,
+)
 from sklearn.linear_model import LogisticRegression, LogisticRegressionCV
 from sklearn.metrics import accuracy_score, roc_auc_score, roc_curve
 from sklearn.model_selection import train_test_split
 from sklearn.naive_bayes import BernoulliNB, GaussianNB
-from sklearn.neighbors.classification import KNeighborsClassifier
-from sklearn.neural_network.multilayer_perceptron import MLPClassifier
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.neural_network import MLPClassifier
 from sklearn.svm import SVC, NuSVC
 from sklearn.tree import DecisionTreeClassifier, ExtraTreeClassifier
 from xgboost import XGBClassifier
@@ -236,6 +241,7 @@ def main():
     final = GradientBoostingClassifier()
     final.fit(X_train, y_train)
     y_pred = final.predict(X_test)
+    y_score = final.predict_proba(X_test)[::, 1]
     print("_________Final Model_________")
     print("Accuracy:", accuracy_score(y_test, y_pred))
     imp = pd.Series(final.feature_importances_, index=X.columns).sort_values(
@@ -243,6 +249,61 @@ def main():
     )
     print("FEATURE IMPORTANCE:")
     print(imp)
+
+    # Plot the ROC curve for final model
+    fpr2, tpr2, thresholds = roc_curve(y_test, y_score)
+    auc2 = roc_auc_score(y_test, y_score)
+    fig2 = px.area(
+        x=fpr2,
+        y=tpr2,
+        title=f"ROC Curve for Final Model (AUC={auc2})",
+        labels=dict(x="False Positive Rate", y="True Positive Rate"),
+        width=700,
+        height=500,
+    )
+    fig2.add_shape(type="line", line=dict(dash="dash"), x0=0, x1=1, y0=0, y1=1)
+    fig2.update_layout(
+        paper_bgcolor="rgb(0,0,0,0)",
+        font=dict(family="Times New Roman", size=20, color="black"),
+    )
+    fig2.update_yaxes(scaleanchor="x", scaleratio=1)
+    fig2.update_xaxes(constrain="domain")
+    fig2.show()
+
+    # Plot the importance chart for final model
+    importances = final.feature_importances_
+    indices = np.argsort(importances)[::-1]
+    fig3 = go.Figure()
+    fig3.add_trace(
+        go.Bar(
+            x=indices,
+            y=importances,
+        )
+    )
+    fig3.update_layout(
+        paper_bgcolor="rgb(0,0,0,0)",
+        font=dict(family="Times New Roman", size=20, color="black"),
+    )
+    fig3.show()
+
+    # Plot the heat map of the final model features
+    def df_to_plotly(df):
+        return {
+            "z": df.values.tolist(),
+            "x": df.columns.tolist(),
+            "y": df.index.tolist(),
+        }
+
+    X = df.drop(
+        columns=[
+            "HOME_TEAM_WINS",
+            "PTS_home",
+            "PTS_away",
+        ],
+        axis=1,
+    )
+    fig4 = go.Figure(data=go.Heatmap(df_to_plotly(X)))
+    fig4.show()
 
     # Export model to pickle file
     with open("./model.pkl", "wb") as model_pkl:
