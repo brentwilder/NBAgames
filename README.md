@@ -2,7 +2,7 @@
 
 ![SacTown](https://e0.365dm.com/18/12/768x432/deaaron-fox-sacramento-kings_4531686.jpg)
 
-### The goal of this project was to predict the winner of any NBA game by engineering at least 50 features deployed into a random forest model. Model exploration was conducted and reports were generated. Finally, this model was then saved to a pkl file and made accessible through docker.
+### The goal of this project was to predict the winner of any NBA game by feature engineering a machine learning (classification) model. Model exploration was conducted and reports were generated in this repository. Finally, this model was then saved to a pkl file and made accessible through docker.
 
 # Setup for developement:
 
