@@ -524,6 +524,8 @@ def main():
     # Feature 60: Difference short-term Rebounds per game
     df["DIFF_REB19"] = df["REB19_homeTeam"] - df["REB19_awayTeam"]
 
+    print("NBA games project: Finished creating 60 features")
+
     # Try all of the models
     # Drop all stats from the actual game (target leakage)
     y = df["HOME_TEAM_WINS"]
@@ -568,6 +570,7 @@ def main():
     ]
     result_table = pd.DataFrame(columns=["classifiers", "fpr", "tpr", "auc"])
 
+    print("NBA games project: Running all possible classification models")
     # Run each model and append to a table
     for cls in classifiers:
         model = cls.fit(X_train, y_train)
@@ -583,6 +586,7 @@ def main():
             },
             ignore_index=True,
         )
+    print("NBA games project: Finished run of all classification models")
 
     # Plot bar graph comparing ROC/AUC
     fig = px.bar(result_table, x="Classifiers", y="AUC")
@@ -605,9 +609,41 @@ def main():
     column = result_table["AUC"]
     max_index = column.idxmax()
     final = result_table.loc[max_index, "Classifiers"]
-
-    # Show feature importance for best model
     final = eval(final)()
+    final.fit(X_train, y_train)
+    y_pred = final.predict(X_test)
+    y_score = final.predict_proba(X_test)[::, 1]
+
+    # Run Sequential Feature Selector (brute force)
+    # Test for ROC AUC
+    print("NBA games project: Beginning brute force.....")
+    sfs1 = SFS(
+        final,
+        k_features=60,
+        forward=True,
+        floating=False,
+        verbose=2,
+        scoring="roc_auc",
+        cv=0,
+    )
+    sfs1 = sfs1.fit(X, y)
+    df_bf = pd.DataFrame.from_dict(sfs1.get_metric_dict()).T
+    df_bf.sort_values("avg_score", inplace=True, ascending=False)
+    print("NBA games project: Finished brute force")
+
+    # Select best model (v2) from brute force
+    # We used AUC of ROC curve
+    # as the performance metric to select optimal model
+    # from previous final model using brute force combinations.
+    column = df_bf["avg_score"].apply(pd.to_numeric)
+    max_index = column.idxmax()
+    ft_list = df_bf.loc[max_index, "feature_names"]
+    X = df[ft_list]
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.3, random_state=2424
+    )
+    print("NBA games project: Selected best model from brute force")
+    # Show feature importance for best model
     final.fit(X_train, y_train)
     y_pred = final.predict(X_test)
     y_score = final.predict_proba(X_test)[::, 1]
@@ -616,8 +652,6 @@ def main():
     imp = pd.Series(final.feature_importances_, index=X.columns).sort_values(
         ascending=False
     )
-    print("FEATURE IMPORTANCE:")
-    print(imp)
 
     # Plot the ROC curve for final model
     fpr2, tpr2, thresholds = roc_curve(y_test, y_score)
@@ -657,30 +691,18 @@ def main():
     )
     fig3.write_html("./output/final_feature_importance.html")
 
-    # Run Exhaustive Feature Selector (brute force)
-    # Run Exhaustive Feature Selector (brute force)
-    sfs1 = SFS(
-        final,
-        k_features=60,
-        forward=True,
-        floating=False,
-        verbose=2,
-        scoring="roc_auc",
-        cv=0,
-    )
-
-    sfs1 = sfs1.fit(X, y)
-
-    sfs1 = sfs1.fit(X, y)
-    df_bf = pd.DataFrame.from_dict(sfs1.get_metric_dict()).T
-    df_bf.sort_values("avg_score", inplace=True, ascending=False)
-
+    print("NBA games project: Exporting data to output folder")
     # Export brute force spreadsheet
     df_bf.to_csv("./output/brute_force.csv")
 
+    # Export final (v2) feature importance
+    imp.to_csv("./output/feature_imp_v2.csv")
+
     # Export model to pickle file
-    with open("./output/model.pkl", "wb") as model_pkl:
+    with open("./output/model_v2.pkl", "wb") as model_pkl:
         pickle.dump(final, model_pkl)
+
+    print("NBA games project: Run complete!")
 
 
 if __name__ == "__main__":
