@@ -11,7 +11,6 @@ import numpy as np
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-from mlxtend.feature_selection import ExhaustiveFeatureSelector as EFS
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.ensemble import (
     AdaBoostClassifier,
@@ -314,6 +313,31 @@ def main():
         how="left",
     )
 
+    # Feature 37: Difference long-term averages PPG (2004-2020)
+    # Home Team minus Away Team
+    df["DIFF_HIST_PPG"] = df["HIST_PPG_homeTeam"] - df["HIST_PPG_awayTeam"]
+
+    # Feature 38: Difference long-term FG percent
+    sactown = "HIST_FGpercent_homeTeam"
+    df["DIFF_HIST_FG"] = df[sactown] - df["HIST_FGpercent_awayTeam"]
+
+    # Feature 39: Difference long-term FT percent
+    kings = "HIST_FTpercent_homeTeam"
+    df["DIFF_HIST_FT"] = df[kings] - df["HIST_FTpercent_awayTeam"]
+
+    # Feature 40: Difference long-term FG3 percent
+    df["DIFF_HIST_FG3"] = (
+        df["HIST_FG3percent_homeTeam"] - df["HIST_FG3percent_awayTeam"]
+    )
+
+    # Feature 41: Difference long-term Assists per game
+    df["DIFF_HIST_APG"] = df["HIST_APG_homeTeam"] - df["HIST_APG_awayTeam"]
+
+    # Feature 42: Difference long-term Rebounds per game
+    df["DIFF_HIST_REB"] = df["HIST_REB_homeTeam"] - df["HIST_REB_awayTeam"]
+
+    # Feature 43:
+
     # Try all of the models
     # Drop all stats from the actual game (target leakage)
     y = df["HOME_TEAM_WINS"]
@@ -448,21 +472,21 @@ def main():
     fig3.show()
 
     # Run Exhaustive Feature Selector (brute force)
-    efs1 = EFS(
-        final,
-        min_features=1,
-        max_features=1,
-        scoring="roc_auc",
-        print_progress=True,
-        cv=5,
-    )
+    # efs1 = EFS(
+    #    final,
+    #    min_features=1,
+    #    max_features=1,
+    #    scoring="roc_auc",
+    #    print_progress=True,
+    #    cv=5,
+    # )
 
-    efs1 = efs1.fit(X, y)
-    df_bf = pd.DataFrame.from_dict(efs1.get_metric_dict()).T
-    df_bf.sort_values("avg_score", inplace=True, ascending=False)
+    # efs1 = efs1.fit(X, y)
+    # df_bf = pd.DataFrame.from_dict(efs1.get_metric_dict()).T
+    # df_bf.sort_values("avg_score", inplace=True, ascending=False)
 
     # Export brute force spreadsheet
-    df_bf.to_csv("brute_force.csv")
+    # df_bf.to_csv("brute_force.csv")
 
     # Export model to pickle file
     with open("./final_model.pkl", "wb") as model_pkl:
