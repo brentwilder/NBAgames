@@ -11,7 +11,7 @@ import numpy as np
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-from mlxtend.feature_selection import ExhaustiveFeatureSelector as EFS
+from mlxtend.feature_selection import SequentialFeatureSelector as SFS
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.ensemble import (
     AdaBoostClassifier,
@@ -658,21 +658,25 @@ def main():
     fig3.write_html("./output/final_feature_importance.html")
 
     # Run Exhaustive Feature Selector (brute force)
-    efs1 = EFS(
+    # Run Exhaustive Feature Selector (brute force)
+    sfs1 = SFS(
         final,
-        min_features=1,
-        max_features=60,
+        k_features=60,
+        forward=True,
+        floating=False,
+        verbose=2,
         scoring="roc_auc",
-        print_progress=True,
-        cv=5,
+        cv=0,
     )
 
-    efs1 = efs1.fit(X, y)
-    df_bf = pd.DataFrame.from_dict(efs1.get_metric_dict()).T
+    sfs1 = sfs1.fit(X, y)
+
+    sfs1 = sfs1.fit(X, y)
+    df_bf = pd.DataFrame.from_dict(sfs1.get_metric_dict()).T
     df_bf.sort_values("avg_score", inplace=True, ascending=False)
 
     # Export brute force spreadsheet
-    df_bf.head(500).to_csv("brute_force.csv")
+    df_bf.to_csv("./output/brute_force.csv")
 
     # Export model to pickle file
     with open("./output/model.pkl", "wb") as model_pkl:
