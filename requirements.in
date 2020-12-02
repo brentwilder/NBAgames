@@ -5,3 +5,4 @@ Flask
 matplotlib
 plotly
 xgboost
+mlxtend

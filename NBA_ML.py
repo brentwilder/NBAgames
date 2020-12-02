@@ -11,6 +11,7 @@ import numpy as np
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+from mlxtend.feature_selection import ExhaustiveFeatureSelector as EFS
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.ensemble import (
     AdaBoostClassifier,
@@ -159,7 +160,159 @@ def main():
         lambda x: 1 if (x <= 6 and x >= 4) else 0
     )
 
-    print(df)
+    # Feature 25: Home Team long-term averages PPG (2004-2020)
+    # Feature 26: '' '' FG percent
+    # Feature 27: '' '' FT percent
+    # Feature 28: '' '' FG3 percent
+    # Feature 29: '' '' AST per game
+    # Feature 30: '' '' REB per game
+
+    table = (
+        pd.pivot_table(df, values="PTS_home", index=[homID], aggfunc=np.mean)
+        .reset_index()
+        .rename(columns={"PTS_home": "HIST_PPG_homeTeam"})
+    )
+    df = pd.merge(
+        df,
+        table,
+        on="HOME_TEAM_ID",
+        how="left",
+    )
+    fghom = "FG_PCT_home"
+    table = (
+        pd.pivot_table(df, values=fghom, index=[homID], aggfunc=np.mean)
+        .reset_index()
+        .rename(columns={"FG_PCT_home": "HIST_FGpercent_homeTeam"})
+    )
+    df = pd.merge(
+        df,
+        table,
+        on="HOME_TEAM_ID",
+        how="left",
+    )
+    fthom = "FT_PCT_home"
+    table = (
+        pd.pivot_table(df, values=fthom, index=[homID], aggfunc=np.mean)
+        .reset_index()
+        .rename(columns={"FT_PCT_home": "HIST_FTpercent_homeTeam"})
+    )
+    df = pd.merge(
+        df,
+        table,
+        on="HOME_TEAM_ID",
+        how="left",
+    )
+    fg3hom = "FG3_PCT_home"
+    table = (
+        pd.pivot_table(df, values=fg3hom, index=[homID], aggfunc=np.mean)
+        .reset_index()
+        .rename(columns={"FG3_PCT_home": "HIST_FG3percent_homeTeam"})
+    )
+    df = pd.merge(
+        df,
+        table,
+        on="HOME_TEAM_ID",
+        how="left",
+    )
+    table = (
+        pd.pivot_table(df, values="AST_home", index=[homID], aggfunc=np.mean)
+        .reset_index()
+        .rename(columns={"AST_home": "HIST_APG_homeTeam"})
+    )
+    df = pd.merge(
+        df,
+        table,
+        on="HOME_TEAM_ID",
+        how="left",
+    )
+    table = (
+        pd.pivot_table(df, values="REB_home", index=[homID], aggfunc=np.mean)
+        .reset_index()
+        .rename(columns={"REB_home": "HIST_REB_homeTeam"})
+    )
+    df = pd.merge(
+        df,
+        table,
+        on="HOME_TEAM_ID",
+        how="left",
+    )
+    # Feature 31: Away Team long-term averages PPG (2004-2020)
+    # Feature 32: '' '' FG percent
+    # Feature 33: '' '' FT percent
+    # Feature 34: '' '' FG3 percent
+    # Feature 35: '' '' AST per game
+    # Feature 36: '' '' REB per game
+    awayID = "TEAM_ID_away"
+    ptawy = "PTS_away"
+    table = (
+        pd.pivot_table(df, values=ptawy, index=[awayID], aggfunc=np.mean)
+        .reset_index()
+        .rename(columns={"PTS_away": "HIST_PPG_awayTeam"})
+    )
+    df = pd.merge(
+        df,
+        table,
+        on="TEAM_ID_away",
+        how="left",
+    )
+    fgawy = "FG_PCT_away"
+    table = (
+        pd.pivot_table(df, values=fgawy, index=[awayID], aggfunc=np.mean)
+        .reset_index()
+        .rename(columns={"FG_PCT_away": "HIST_FGpercent_awayTeam"})
+    )
+    df = pd.merge(
+        df,
+        table,
+        on="TEAM_ID_away",
+        how="left",
+    )
+    ftawy = "FT_PCT_away"
+    table = (
+        pd.pivot_table(df, values=ftawy, index=[awayID], aggfunc=np.mean)
+        .reset_index()
+        .rename(columns={"FT_PCT_away": "HIST_FTpercent_awayTeam"})
+    )
+    df = pd.merge(
+        df,
+        table,
+        on="TEAM_ID_away",
+        how="left",
+    )
+    f3awy = "FG3_PCT_away"
+    table = (
+        pd.pivot_table(df, values=f3awy, index=[awayID], aggfunc=np.mean)
+        .reset_index()
+        .rename(columns={"FG3_PCT_away": "HIST_FG3percent_awayTeam"})
+    )
+    df = pd.merge(
+        df,
+        table,
+        on="TEAM_ID_away",
+        how="left",
+    )
+    table = (
+        pd.pivot_table(df, values="AST_away", index=[awayID], aggfunc=np.mean)
+        .reset_index()
+        .rename(columns={"AST_away": "HIST_APG_awayTeam"})
+    )
+    df = pd.merge(
+        df,
+        table,
+        on="TEAM_ID_away",
+        how="left",
+    )
+    table = (
+        pd.pivot_table(df, values="REB_away", index=[awayID], aggfunc=np.mean)
+        .reset_index()
+        .rename(columns={"REB_away": "HIST_REB_awayTeam"})
+    )
+    df = pd.merge(
+        df,
+        table,
+        on="TEAM_ID_away",
+        how="left",
+    )
 
     # Try all of the models
     # Drop all stats from the actual game (target leakage)
@@ -287,6 +440,23 @@ def main():
         yaxis_title="Feature Importance",
     )
     fig3.show()
+
+    # Run Exhaustive Feature Selector (brute force)
+    efs1 = EFS(
+        final,
+        min_features=1,
+        max_features=36,
+        scoring="roc_auc",
+        print_progress=True,
+        cv=5,
+    )
+
+    efs1 = efs1.fit(X, y)
+    df_bf = pd.DataFrame.from_dict(efs1.get_metric_dict()).T
+    df_bf.sort_values("avg_score", inplace=True, ascending=False)
+
+    # Export brute force spreadsheet
+    df_bf.to_csv("brute_force.csv")
 
     # Export model to pickle file
     with open("./final_model.pkl", "wb") as model_pkl:
