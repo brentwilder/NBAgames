@@ -51,6 +51,15 @@ def main():
     df_rnk.sort_values("STANDINGSDATE")
     df_rnk.set_index("STANDINGSDATE")
 
+    df_19 = pd.read_csv("./data/games_2019.csv", na_filter=False)
+    nan_value = float("NaN")
+    df_19.replace("", nan_value, inplace=True)
+    df_19 = df_19.dropna()
+    df_19.drop_duplicates()
+    df_19.sort_values("GAME_DATE_EST")
+    df_19.set_index("GAME_DATE_EST")
+    df_19.drop(["GAME_STATUS_TEXT", "TEAM_ID_home"], axis=1, inplace=True)
+
     # Begin Feature Engineering (1-6 from data)
     # Feature 7: Home Team arena capacity
     # Feature 8: Year Home Team was founded
@@ -336,7 +345,183 @@ def main():
     # Feature 42: Difference long-term Rebounds per game
     df["DIFF_HIST_REB"] = df["HIST_REB_homeTeam"] - df["HIST_REB_awayTeam"]
 
-    # Feature 43:
+    # Feature 43: Home Team short-term averages PPG (19)
+    # Feature 44: '' '' FG percent
+    # Feature 45: '' '' FT percent
+    # Feature 46: '' '' FG3 percent
+    # Feature 47: '' '' AST per game
+    # Feature 48: '' '' REB per game
+    vv = "PTS_home"
+    table = (
+        pd.pivot_table(df_19, values=vv, index=[homID], aggfunc=np.mean)
+        .reset_index()
+        .rename(columns={"PTS_home": "PPG19_homeTeam"})
+    )
+    df = pd.merge(
+        df,
+        table,
+        on="HOME_TEAM_ID",
+        how="left",
+    )
+    fghom = "FG_PCT_home"
+    table = (
+        pd.pivot_table(df_19, values=fghom, index=[homID], aggfunc=np.mean)
+        .reset_index()
+        .rename(columns={"FG_PCT_home": "FGper19_homeTeam"})
+    )
+    df = pd.merge(
+        df,
+        table,
+        on="HOME_TEAM_ID",
+        how="left",
+    )
+    fthom = "FT_PCT_home"
+    table = (
+        pd.pivot_table(df_19, values=fthom, index=[homID], aggfunc=np.mean)
+        .reset_index()
+        .rename(columns={"FT_PCT_home": "FTper19_homeTeam"})
+    )
+    df = pd.merge(
+        df,
+        table,
+        on="HOME_TEAM_ID",
+        how="left",
+    )
+    fg3hom = "FG3_PCT_home"
+    table = (
+        pd.pivot_table(df_19, values=fg3hom, index=[homID], aggfunc=np.mean)
+        .reset_index()
+        .rename(columns={"FG3_PCT_home": "FG3per19_homeTeam"})
+    )
+    df = pd.merge(
+        df,
+        table,
+        on="HOME_TEAM_ID",
+        how="left",
+    )
+    ath = "AST_home"
+    table = (
+        pd.pivot_table(df_19, values=ath, index=[homID], aggfunc=np.mean)
+        .reset_index()
+        .rename(columns={"AST_home": "APG19_homeTeam"})
+    )
+    df = pd.merge(
+        df,
+        table,
+        on="HOME_TEAM_ID",
+        how="left",
+    )
+    rbh = "REB_home"
+    table = (
+        pd.pivot_table(df_19, values=rbh, index=[homID], aggfunc=np.mean)
+        .reset_index()
+        .rename(columns={"REB_home": "REB19_homeTeam"})
+    )
+    df = pd.merge(
+        df,
+        table,
+        on="HOME_TEAM_ID",
+        how="left",
+    )
+
+    # Feature 49: Away Team short-term averages PPG (19)
+    # Feature 50: '' '' FG percent
+    # Feature 51: '' '' FT percent
+    # Feature 52: '' '' FG3 percent
+    # Feature 53: '' '' AST per game
+    # Feature 54: '' '' REB per game
+    awayID = "TEAM_ID_away"
+    ptawy = "PTS_away"
+    table = (
+        pd.pivot_table(df_19, values=ptawy, index=[awayID], aggfunc=np.mean)
+        .reset_index()
+        .rename(columns={"PTS_away": "PPG19_awayTeam"})
+    )
+    df = pd.merge(
+        df,
+        table,
+        on="TEAM_ID_away",
+        how="left",
+    )
+    fgawy = "FG_PCT_away"
+    table = (
+        pd.pivot_table(df_19, values=fgawy, index=[awayID], aggfunc=np.mean)
+        .reset_index()
+        .rename(columns={"FG_PCT_away": "FGper19_awayTeam"})
+    )
+    df = pd.merge(
+        df,
+        table,
+        on="TEAM_ID_away",
+        how="left",
+    )
+    ftawy = "FT_PCT_away"
+    table = (
+        pd.pivot_table(df_19, values=ftawy, index=[awayID], aggfunc=np.mean)
+        .reset_index()
+        .rename(columns={"FT_PCT_away": "FTper19_awayTeam"})
+    )
+    df = pd.merge(
+        df,
+        table,
+        on="TEAM_ID_away",
+        how="left",
+    )
+    f3awy = "FG3_PCT_away"
+    table = (
+        pd.pivot_table(df_19, values=f3awy, index=[awayID], aggfunc=np.mean)
+        .reset_index()
+        .rename(columns={"FG3_PCT_away": "FG3per19_awayTeam"})
+    )
+    df = pd.merge(
+        df,
+        table,
+        on="TEAM_ID_away",
+        how="left",
+    )
+    ata = "AST_away"
+    table = (
+        pd.pivot_table(df_19, values=ata, index=[awayID], aggfunc=np.mean)
+        .reset_index()
+        .rename(columns={"AST_away": "APG19_awayTeam"})
+    )
+    df = pd.merge(
+        df,
+        table,
+        on="TEAM_ID_away",
+        how="left",
+    )
+    rba = "REB_away"
+    table = (
+        pd.pivot_table(df_19, values=rba, index=[awayID], aggfunc=np.mean)
+        .reset_index()
+        .rename(columns={"REB_away": "REB19_awayTeam"})
+    )
+    df = pd.merge(
+        df,
+        table,
+        on="TEAM_ID_away",
+        how="left",
+    )
+
+    # Feature 55: Difference short-term averages PPG (19)
+    # Home Team minus Away Team
+    df["DIFF_PPG19"] = df["PPG19_homeTeam"] - df["PPG19_awayTeam"]
+
+    # Feature 56: Difference short-term FG percent
+    df["DIFF_FG19"] = df["FGper19_homeTeam"] - df["FGper19_awayTeam"]
+
+    # Feature 57: Difference short-term FT percent
+    df["DIFF_FT19"] = df["FTper19_homeTeam"] - df["FTper19_awayTeam"]
+
+    # Feature 58: Difference short-term FG3 percent
+    df["DIFF_FG319"] = df["FG3per19_homeTeam"] - df["FG3per19_awayTeam"]
+
+    # Feature 59: Difference short-term Assists per game
+    df["DIFF_APG19"] = df["APG19_homeTeam"] - df["APG19_awayTeam"]
+
+    # Feature 60: Difference short-term Rebounds per game
+    df["DIFF_REB19"] = df["REB19_homeTeam"] - df["REB19_awayTeam"]
 
     # Try all of the models
     # Drop all stats from the actual game (target leakage)
