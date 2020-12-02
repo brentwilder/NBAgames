@@ -596,7 +596,7 @@ def main():
         title="AUC values from ROC curve",
         font=dict(family="Times New Roman", size=20, color="black"),
     )
-    fig.show()
+    fig.write_html("./output/AUC_all_models.html")
 
     # Select best model
     # For this study, we used AUC of ROC curve
@@ -636,7 +636,7 @@ def main():
     )
     fig2.update_yaxes(scaleanchor="x", scaleratio=1)
     fig2.update_xaxes(constrain="domain")
-    fig2.show()
+    fig2.write_html("./output/AUC_final_model.html")
 
     # Plot the importance chart for final model
     importances = final.feature_importances_
@@ -654,7 +654,7 @@ def main():
         xaxis_title="Feature #",
         yaxis_title="Feature Importance",
     )
-    fig3.show()
+    fig3.write_html("./output/final_feature_importance.html")
 
     # Run Exhaustive Feature Selector (brute force)
     # efs1 = EFS(
@@ -674,7 +674,7 @@ def main():
     # df_bf.to_csv("brute_force.csv")
 
     # Export model to pickle file
-    with open("./final_model.pkl", "wb") as model_pkl:
+    with open("./output/model.pkl", "wb") as model_pkl:
         pickle.dump(final, model_pkl)
 
 
