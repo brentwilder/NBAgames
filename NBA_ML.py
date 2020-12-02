@@ -136,7 +136,7 @@ def main():
     visStd = "STANDINGSDATE_awayTeam"
     df.drop(["TEAM_ID_awayTeam", visStd], axis=1, inplace=True)
 
-    # Feature 21: Day of the week game was on (0-6)
+    # Feature 21: Day of the week game is on (0-6)
     df["WEEKDAY"] = df["GAME_DATE_EST"].apply(
         lambda x: (
             datetime.fromordinal(datetime(1900, 1, 1).toordinal() + x - 2)
@@ -146,16 +146,23 @@ def main():
     # Feature 22: Weekend game?  (1=True,0=False)
     df["WEEKEND_GAME"] = df["WEEKDAY"].apply(lambda x: 0 if x < 5 else 1)
 
-    # Feature 23: Month number game was on (1-12)
+    # Feature 23: Month number game is on (1-12)
     df["MONTH_NUM"] = df["GAME_DATE_EST"].apply(
         lambda x: (
             datetime.fromordinal(datetime(1900, 1, 1).toordinal() + x - 2)
         ).strftime("%m")
     )
 
+    # Feature 24: Is this a playoff game (April-June)? (1=True,0=False)
+    df = df.astype(float)
+    df["PLAYOFF_GAME"] = df["MONTH_NUM"].apply(
+        lambda x: 1 if (x <= 6 and x >= 4) else 0
+    )
+
+    print(df)
+
     # Try all of the models
     # Drop all stats from the actual game (target leakage)
-    df = df.astype(float)
     y = df["HOME_TEAM_WINS"]
     X = df.drop(
         columns=[
@@ -206,16 +213,16 @@ def main():
         auc = roc_auc_score(y_test, yproba)
         result_table = result_table.append(
             {
-                "classifiers": cls.__class__.__name__,
+                "Classifiers": cls.__class__.__name__,
                 "fpr": fpr,
                 "tpr": tpr,
-                "auc": auc,
+                "AUC": auc,
             },
             ignore_index=True,
         )
 
     # Plot bar graph comparing ROC/AUC
-    fig = px.bar(result_table, x="classifiers", y="auc")
+    fig = px.bar(result_table, x="Classifiers", y="AUC")
     fig.update_traces(
         marker_color="rgb(158,202,225)",
         marker_line_color="rgb(8,48,107)",
@@ -224,7 +231,7 @@ def main():
     )
     fig.update_layout(
         paper_bgcolor="rgb(0,0,0,0)",
-        title="auc values from ROC curve",
+        title="AUC values from ROC curve",
         font=dict(family="Times New Roman", size=20, color="black"),
     )
     fig.show()
@@ -276,6 +283,8 @@ def main():
     fig3.update_layout(
         paper_bgcolor="rgb(0,0,0,0)",
         font=dict(family="Times New Roman", size=20, color="black"),
+        xaxis_title="Feature #",
+        yaxis_title="Feature Importance",
     )
     fig3.show()
 
