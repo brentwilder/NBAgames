@@ -389,9 +389,15 @@ def main():
     )
     fig.show()
 
+    # Select best model
+    # For this study, we used AUC of ROC curve
+    # as the performance metric to select optimal model
+    column = result_table["AUC"]
+    max_index = column.idxmax()
+    final = result_table.loc[max_index, "Classifiers"]
+
     # Show feature importance for best model
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
-    final = XGBClassifier()
+    final = eval(final)()
     final.fit(X_train, y_train)
     y_pred = final.predict(X_test)
     y_score = final.predict_proba(X_test)[::, 1]
@@ -445,7 +451,7 @@ def main():
     efs1 = EFS(
         final,
         min_features=1,
-        max_features=36,
+        max_features=1,
         scoring="roc_auc",
         print_progress=True,
         cv=5,
