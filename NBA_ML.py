@@ -616,7 +616,7 @@ def main():
     y_score = final.predict_proba(X_test)[::, 1]
     print("NBA games project: Select " + str(final1) + " as classifier")
 
-    # Run Sequential Feature Selector (brute force)
+    # Run Sequential Feature Selector (brute force) -
     # Test for ROC AUC
     print("NBA games project: Beginning brute force......")
     sfs1 = SFS(
