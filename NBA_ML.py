@@ -638,7 +638,9 @@ def main():
     column = df_bf["avg_score"].apply(pd.to_numeric)
     max_index = column.idxmax()
     ft_list = df_bf.loc[max_index, "feature_names"]
-    X = df[ft_list]
+    ft_list = list(ft_list)
+    ft_list = str(ft_list)[3:-3]
+    X = df[[ft_list]]
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.3, random_state=2424
     )
