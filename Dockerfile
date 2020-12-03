@@ -21,7 +21,7 @@ COPY requirements.txt .
 RUN pip3 install --compile --no-cache-dir -r requirements.txt
 
 # Get files to create image and indicate where to put them
-COPY app.py /code/app.py
+COPY NBA_ML.py /code/NBA_ML.py
 COPY . /code
 
 # Create an unprivileged user
@@ -31,4 +31,4 @@ RUN useradd --system --user-group --shell /sbin/nologin services
 USER services
 
 # Run image as a container
-CMD ["python", "app.py"]
+CMD ["python", "NBA_ML.py"]

@@ -1,6 +1,8 @@
 # Final Project - Using ML and NBA games to predict winners
 # 0 = home team loses; 1 = home team wins
 # Brenton Wilder
+# San Diego State University
+# Fall 2020 - Machine Learning Engineering
 
 # Import libraries
 import pickle
@@ -20,7 +22,7 @@ from sklearn.ensemble import (
     RandomForestClassifier,
 )
 from sklearn.linear_model import LogisticRegression, LogisticRegressionCV
-from sklearn.metrics import accuracy_score, roc_auc_score, roc_curve
+from sklearn.metrics import roc_auc_score, roc_curve
 from sklearn.model_selection import train_test_split
 from sklearn.naive_bayes import BernoulliNB, GaussianNB
 from sklearn.neighbors import KNeighborsClassifier
@@ -608,15 +610,15 @@ def main():
     # as the performance metric to select optimal model
     column = result_table["AUC"]
     max_index = column.idxmax()
-    final = result_table.loc[max_index, "Classifiers"]
-    final = eval(final)()
+    final1 = result_table.loc[max_index, "Classifiers"]
+    final = eval(final1)()
     final.fit(X_train, y_train)
-    y_pred = final.predict(X_test)
     y_score = final.predict_proba(X_test)[::, 1]
+    print("NBA games project: Select " + str(final1) + " as classifier")
 
     # Run Sequential Feature Selector (brute force)
     # Test for ROC AUC
-    print("NBA games project: Beginning brute force.....")
+    print("NBA games project: Beginning brute force......")
     sfs1 = SFS(
         final,
         k_features=60,
@@ -638,19 +640,18 @@ def main():
     column = df_bf["avg_score"].apply(pd.to_numeric)
     max_index = column.idxmax()
     ft_list = df_bf.loc[max_index, "feature_names"]
-    ft_list = list(ft_list)
-    ft_list = str(ft_list)[3:-3]
-    X = df[[ft_list]]
+    ft_list = str(ft_list)[2:-2]
+    ft_list = str(ft_list).replace("'", "")
+    ft_list = str(ft_list).replace(" ", "")
+    ft_list = ft_list.split(",")
+    X = df[ft_list]
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.3, random_state=2424
     )
-    print("NBA games project: Selected best model from brute force")
+    print("NBA games project: Selected optimal feature combination")
     # Show feature importance for best model
     final.fit(X_train, y_train)
-    y_pred = final.predict(X_test)
     y_score = final.predict_proba(X_test)[::, 1]
-    print("_________Final Model_________")
-    print("Accuracy:", accuracy_score(y_test, y_pred))
     imp = pd.Series(final.feature_importances_, index=X.columns).sort_values(
         ascending=False
     )
@@ -705,6 +706,10 @@ def main():
         pickle.dump(final, model_pkl)
 
     print("NBA games project: Run complete!")
+    print("NBA games project: You can now view results in output folder")
+    print("We all have self-doubt.You don’t deny it")
+    print("but you also don’t capitulate to it. You embrace it.")
+    print("   - Mamba")
 
 
 if __name__ == "__main__":

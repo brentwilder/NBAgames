@@ -1,6 +1,6 @@
 version: "3.8"
 services:
-  web:
+  mamba:
     build:
       context: .
       dockerfile: Dockerfile
