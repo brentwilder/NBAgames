@@ -1,9 +1,12 @@
 version: "3.8"
 services:
   mamba:
+    privileged: true
     build:
       context: .
       dockerfile: Dockerfile
     container_name: NBA
+    volumes:
+      - ./output:/output
     ports:
       - "5000:5000"
