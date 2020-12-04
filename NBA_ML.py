@@ -625,9 +625,8 @@ def main():
         forward=True,
         floating=False,
         scoring="roc_auc",
-        cv=0,
     )
-    sfs1 = sfs1.fit(X_train, y_train)
+    sfs1 = sfs1.fit(X, y)
     df_bf = pd.DataFrame.from_dict(sfs1.get_metric_dict()).T
     df_bf.sort_values("avg_score", inplace=True, ascending=False)
     print("NBA games project: Finished brute force")
