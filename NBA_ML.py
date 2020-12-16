@@ -555,14 +555,14 @@ def main():
         X, y, test_size=0.3, shuffle=False, random_state=None,
     )
     classifiers = [
-        ExtraTreeClassifier(random_state=2408),
-        DecisionTreeClassifier(random_state=2408),
+        ExtraTreeClassifier(),
+        DecisionTreeClassifier(),
         MLPClassifier(),
         KNeighborsClassifier(),
         AdaBoostClassifier(),
         GradientBoostingClassifier(),
         BaggingClassifier(),
-        RandomForestClassifier(random_state=2408),
+        RandomForestClassifier(),
         BernoulliNB(),
         GaussianNB(),
         LinearDiscriminantAnalysis(),
