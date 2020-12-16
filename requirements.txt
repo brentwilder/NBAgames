@@ -11,10 +11,12 @@ itsdangerous==1.1.0       # via flask
 jinja2==2.11.2            # via flask
 joblib==0.17.0            # via mlxtend, scikit-learn
 kiwisolver==1.3.1         # via matplotlib
+llvmlite==0.35.0          # via numba
 markupsafe==1.1.1         # via jinja2
 matplotlib==3.3.3         # via -r requirements.in, mlxtend
 mlxtend==0.18.0           # via -r requirements.in
-numpy==1.18.4             # via -r requirements.in, matplotlib, mlxtend, pandas, scikit-learn, scipy, xgboost
+numba==0.52.0             # via -r requirements.in
+numpy==1.18.4             # via -r requirements.in, matplotlib, mlxtend, numba, pandas, scikit-learn, scipy, xgboost
 pandas==1.1.4             # via -r requirements.in, mlxtend
 pillow==8.0.1             # via matplotlib
 plotly==4.13.0            # via -r requirements.in
