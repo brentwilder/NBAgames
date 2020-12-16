@@ -16,15 +16,12 @@ from mlxtend.feature_selection import SequentialFeatureSelector as SFS
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.ensemble import AdaBoostClassifier
 from sklearn.ensemble import BaggingClassifier
-from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.linear_model import LogisticRegressionCV
 from sklearn.metrics import roc_auc_score
 from sklearn.metrics import roc_curve
 from sklearn.model_selection import train_test_split
-from sklearn.naive_bayes import BernoulliNB
-from sklearn.naive_bayes import GaussianNB
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.neural_network import MLPClassifier
 from sklearn.svm import NuSVC
@@ -560,11 +557,8 @@ def main():
         MLPClassifier(),
         KNeighborsClassifier(),
         AdaBoostClassifier(),
-        GradientBoostingClassifier(),
         BaggingClassifier(),
         RandomForestClassifier(),
-        BernoulliNB(),
-        GaussianNB(),
         LinearDiscriminantAnalysis(),
         LogisticRegression(),
         LogisticRegressionCV(),
@@ -653,33 +647,31 @@ def main():
     # Show feature importance for best model
     final.fit(X_train, y_train)
     y_score = final.predict_proba(X_test)[::, 1]
-
-    if hasattr(final, 'feature_importances'):
-        imp = pd.Series(
-            final.feature_importances_,
-            index=X.columns,
-        ).sort_values(
-            ascending=False,
-        )
-        # Plot the importance chart for final model
-        importances = final.feature_importances_
-        indices = np.argsort(importances)[::-1]
-        fig3 = go.Figure()
-        fig3.add_trace(
-            go.Bar(
-                x=indices,
-                y=importances,
-            ),
-        )
-        fig3.update_layout(
-            paper_bgcolor='rgb(0,0,0,0)',
-            font=dict(family='Times New Roman', size=20, color='black'),
-            xaxis_title='Feature #',
-            yaxis_title='Feature Importance',
-        )
-        fig3.write_html('./output/final_feature_importance.html')
-        # Export final (v2) feature importance
-        imp.to_csv('./output/feature_imp_v2.csv')
+    imp = pd.Series(
+        final.feature_importances_,
+        index=X.columns,
+    )   .sort_values(
+        ascending=False,
+    )
+    # Plot the importance chart for final model
+    importances = final.feature_importances_
+    indices = np.argsort(importances)[::-1]
+    fig3 = go.Figure()
+    fig3.add_trace(
+        go.Bar(
+            x=indices,
+            y=importances,
+        ),
+    )
+    fig3.update_layout(
+        paper_bgcolor='rgb(0,0,0,0)',
+        font=dict(family='Times New Roman', size=20, color='black'),
+        xaxis_title='Feature #',
+        yaxis_title='Feature Importance',
+    )
+    fig3.write_html('./output/final_feature_importance.html')
+    # Export final (v2) feature importance
+    imp.to_csv('./output/feature_imp_v2.csv')
 
     # Plot the ROC curve for final model
     fpr2, tpr2, thresholds = roc_curve(y_test, y_score)
@@ -711,9 +703,6 @@ def main():
 
     print('NBA games project: Run complete!')
     print('NBA games project: You can now view results in output folder')
-    print('We all have self-doubt.You don’t deny it')
-    print('but you also don’t capitulate to it. You embrace it.')
-    print('   - Mamba')
 
 
 if __name__ == '__main__':
