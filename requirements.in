@@ -6,3 +6,4 @@ matplotlib
 plotly
 xgboost
 mlxtend
+numba

@@ -4,6 +4,9 @@ FROM python:3.9.0
 # create and use folder for the image
 WORKDIR /code
 
+# Switch to the root
+USER root
+
 # Port
 ENV PORT 5000
 
@@ -25,10 +28,8 @@ COPY NBA_ML.py /code/NBA_ML.py
 COPY . /code
 
 # Create an unprivileged user
-RUN useradd --system --user-group --shell /sbin/nologin services
-
-# Switch to the unprivileged user
-USER services
+# RUN useradd --system --user-group --shell /sbin/nologin services
 
 # Run image as a container
-CMD ["python", "NBA_ML.py"]
+RUN chmod +x NBA_ML.py
+CMD ["python","-u","NBA_ML.py"]
